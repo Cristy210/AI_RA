@@ -1,0 +1,4 @@
+/data/
+/vectorstore/
+/.vscode/
+/src/utils/__pycache__/
