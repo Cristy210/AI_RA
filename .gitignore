@@ -2,3 +2,4 @@
 /vectorstore/
 /.vscode/
 /src/utils/__pycache__/
+/llm/__pycache__
