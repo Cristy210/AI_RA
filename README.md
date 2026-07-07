@@ -1,2 +1,2 @@
 # AI_RA
-LLM – Research Assistant using MLX model
+AI – Research Assistant using MLX-LM Models
