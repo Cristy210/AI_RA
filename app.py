@@ -29,14 +29,14 @@ def get_retriever():
     across subsequent reruns to avoid repeatedly loading the vector
     database from disk.
 
-    Retrieves the top `k` most relevant document chunks (`k=10`) for
+    Retrieves the top `k` most relevant document chunks for
     each user query before passing them to the language model for
     answer generation.
 
     Returns:
         BaseRetriever: Configured LangChain retriever.
     """
-    return load_retriever(k=10)
+    return load_retriever(k=40)
 
 @st.cache_resource
 def get_llm():

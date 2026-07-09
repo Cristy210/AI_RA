@@ -19,7 +19,7 @@ from llm.mlx_model import MLXModel
 
 DB_DIR = PROJECT_ROOT / "vectorstore" / "research_papers"
 
-def load_retriever(k:int = 5):
+def load_retriever(k:int = 25):
     """Create a Chroma document retriever.
 
     Initializes the embedding model, loads the persistent Chroma vector
@@ -28,7 +28,7 @@ def load_retriever(k:int = 5):
 
     Args:
         k (int, optional): Number of document chunks to retrieve for each
-            query. Defaults to 5.
+            query. Defaults to 25.
 
     Returns:
         BaseRetriever: Configured LangChain retriever backed by Chroma.
@@ -102,6 +102,10 @@ Guidelines:
 - If the excerpts are insufficient, say so clearly.
 - When possible, mention the relevant paper/source numbers.
 - Keep the answer clear, technical, and concise. 
+- Format mathematical notaitons using Markdown LaTeX.
+- use inline math with `$...$`.
+- use display equations with `$$...$$`.
+- For example, write `$\\ell_1$`, `$C^T$`, `$|C| + |C^T|$`, and `$\\operatorname{{diag}}(C)=0$`.
 
 Question:
 {query}
