@@ -5,8 +5,6 @@ A fully local **Retrieval-Augmented Generation (RAG)** application for querying 
 
 This project demonstrates how to build a modern RAG pipeline that runs entirely on Apple Silicon. Research papers are downloaded, indexed into a vector database, semantically retrieved based on a user's question, and passed to a locally hosted Large Language Model to generate evidence-based responses.
 
-Although the example dataset included in this repository focuses on **Sparse Subspace Clustering**, the architecture is intentionally modular and can be adapted to virtually any research domain by replacing the indexed documents.
-
 ## Features
 - 📚 Download research papers directly from arXiv
 - 📄 Parse and extract text from PDF documents
