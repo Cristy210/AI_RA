@@ -8,7 +8,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
 QUERY = "sparse subspace clustering"
-MAX_RESULTS = 10
+MAX_RESULTS = 30
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -51,7 +51,7 @@ def download_arxiv_papers(query:str, max_results:int):
         )
     return downloaded_papers
             
-# papers = download_arxiv_papers(QUERY, MAX_RESULTS)
+papers = download_arxiv_papers(QUERY, MAX_RESULTS)
 # print(papers)
 
 def load_pdfs_as_docs(papers):
