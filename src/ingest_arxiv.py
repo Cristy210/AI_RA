@@ -16,8 +16,10 @@ PAPER_DIR = PROJECT_ROOT / "data" / "papers"
 DB_DIR = PROJECT_ROOT / "vectorstore" / "research_papers"
 
 PAPER_DIR.mkdir(parents=True, exist_ok=True)
+DB_DIR.mkdir(parents=True, exist_ok=True)
 
-def download_arxiv_papers(query:str, max_results:int):
+
+def download_arxiv_papers(query: str, max_results: int):
     client = arxiv.Client()
 
     search = arxiv.Search(
@@ -37,7 +39,7 @@ def download_arxiv_papers(query:str, max_results:int):
             download_pdf(paper.pdf_url, pdf_path)
         else:
             print(f"Already exists: {paper.title}")
-        
+
         downloaded_papers.append(
             {
                 "pdf_path": pdf_path,
@@ -50,16 +52,14 @@ def download_arxiv_papers(query:str, max_results:int):
             }
         )
     return downloaded_papers
-            
-papers = download_arxiv_papers(QUERY, MAX_RESULTS)
-# print(papers)
+
 
 def load_pdfs_as_docs(papers):
     docs = []
 
     for paper in papers:
         loader = PyPDFLoader(str(paper["pdf_path"]))
-        pages  = loader.load()
+        pages = loader.load()
 
         for page in pages:
             page.metadata.update(
@@ -73,8 +73,9 @@ def load_pdfs_as_docs(papers):
                 }
             )
         docs.extend(pages)
-    
+
     return docs
+
 
 def main():
     papers = download_arxiv_papers(QUERY, MAX_RESULTS)
@@ -88,8 +89,8 @@ def main():
     chunks = splitter.split_documents(docs)
 
     embeddings = HuggingFaceEmbeddings(
-        model_name = "BAAI/bge-small-en-v1.5",
-        encode_kwargs = {"normalize_embeddings": True},
+        model_name="BAAI/bge-small-en-v1.5",
+        encode_kwargs={"normalize_embeddings": True},
     )
 
     Chroma.from_documents(
@@ -103,6 +104,7 @@ def main():
     print(f"Loaded PDF pages: {len(docs)}")
     print(f"Indexed Chunks: {len(chunks)}")
     print(f"Saved Vector DB to: {DB_DIR}")
+
 
 if __name__ == "__main__":
     main()

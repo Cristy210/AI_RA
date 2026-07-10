@@ -1,13 +1,14 @@
 """Core retrievel-augmented generation (RAG) pipeline.
 
 This module provides utilities for retrieving relevant document chunks
-from a Chroma Vector database, constructing prompts from the retrieved 
-context, and generating responses using the chosen MLX-LM Model. 
+from a Chroma Vector database, constructing prompts from the retrieved
+context, and generating responses using the chosen MLX-LM Model.
 """
 
 from pathlib import Path
 import sys
 
+from llm.mlx_model import MLXModel
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
@@ -15,11 +16,10 @@ from langchain_core.documents import Document
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-from llm.mlx_model import MLXModel
-
 DB_DIR = PROJECT_ROOT / "vectorstore" / "research_papers"
 
-def load_retriever(k:int = 25):
+
+def load_retriever(k: int = 25):
     """Create a Chroma document retriever.
 
     Initializes the embedding model, loads the persistent Chroma vector
@@ -34,19 +34,17 @@ def load_retriever(k:int = 25):
         BaseRetriever: Configured LangChain retriever backed by Chroma.
     """
     embeddings = HuggingFaceEmbeddings(
-        model_name = "BAAI/bge-small-en-v1.5",
-        encode_kwargs = {"normalize_embeddings": True},
+        model_name="BAAI/bge-small-en-v1.5",
+        encode_kwargs={"normalize_embeddings": True},
     )
 
-    db = Chroma(
-        persist_directory=DB_DIR,
-        embedding_function=embeddings
-    )
+    db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
 
     print("Using DB: ", DB_DIR)
     print("Number of doc chunks:", db._collection.count())
 
     return db.as_retriever(search_kwargs={"k": k})
+
 
 def format_context(docs: list[Document]) -> str:
     """Format retrieved documents into a prompt-ready context string.
@@ -79,7 +77,8 @@ Page: {page}
         context_blocks.append(block)
     return "\n\n".join(context_blocks)
 
-def build_prompt(query:str, context:str) -> str:
+
+def build_prompt(query: str, context: str) -> str:
     """Construct the prompt for the language model.
 
     Combines the user's research question with the retrieved document
@@ -116,7 +115,8 @@ Retrieved excerpts:
 Response:
 """
 
-def rag_answer(query:str) -> str:
+
+def rag_answer(query: str) -> str:
     """Generate a response using the complete RAG pipeline.
 
     Retrieves the most relevant document chunks, formats them into a
@@ -139,7 +139,8 @@ def rag_answer(query:str) -> str:
 
     return answer
 
-def rag_answer_stream(query:str, retriever=None, llm=None):
+
+def rag_answer_stream(query: str, retriever=None, llm=None):
     """Generate a streaming response using the RAG pipeline.
 
     Uses the supplied retriever and language model if provided;
@@ -159,22 +160,23 @@ def rag_answer_stream(query:str, retriever=None, llm=None):
     """
     if retriever is None:
         retriever = load_retriever(k=5)
-    
+
     if llm is None:
         llm = MLXModel(max_tokens=700)
-    
+
     docs = retriever.invoke(query)
     context = format_context(docs)
     prompt = build_prompt(query, context)
 
     yield from llm.stream_response(prompt)
 
+
 if __name__ == "__main__":
     query = "What is the main objective in sparse subspace clustering methods?"
 
     answer = rag_answer(query)
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("Final Answer")
-    print("="*80)
+    print("=" * 80)
     print(answer)

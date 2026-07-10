@@ -8,8 +8,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DB_DIR = PROJECT_ROOT / "vectorstore" / "research_papers"
 
 embeddings = HuggingFaceEmbeddings(
-    model_name = "BAAI/bge-small-en-v1.5",
-    encode_kwargs = {"normalize_embeddings": True},
+    model_name="BAAI/bge-small-en-v1.5",
+    encode_kwargs={"normalize_embeddings": True},
 )
 
 db = Chroma(
@@ -24,7 +24,7 @@ retriever = db.as_retriever(search_kwargs={"k": 5})
 query = "What are the optimization methods used in sparse subspace clustering?"
 results = retriever.invoke(query)
 
-for i, doc in enumerate(results, start= 1):
+for i, doc in enumerate(results, start=1):
     print("=" * 80)
     print(f"Result {i}")
     print("Source:", doc.metadata.get("entry_id"))
