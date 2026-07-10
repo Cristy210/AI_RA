@@ -9,17 +9,18 @@ from pathlib import Path
 import sys
 import streamlit as st
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-sys.path.append(str(PROJECT_ROOT))
-
 from src.rag import rag_answer_stream, load_retriever
 from llm.mlx_model import MLXModel
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+sys.path.append(str(PROJECT_ROOT))
 
 st.set_page_config(
     page_title="AI Research Assistant",
     page_icon="🤖📚",
     layout="wide",
 )
+
 
 @st.cache_resource
 def get_retriever():
@@ -38,6 +39,7 @@ def get_retriever():
     """
     return load_retriever(k=40)
 
+
 @st.cache_resource
 def get_llm():
     """Load and cache the MLX language model.
@@ -49,6 +51,7 @@ def get_llm():
         MLXModel: Initialized MLX language model.
     """
     return MLXModel(max_tokens=700)
+
 
 retriever = get_retriever()
 llm = get_llm()
@@ -75,7 +78,7 @@ if query:
 
     with st.chat_message("user"):
         st.markdown(query)
-    
+
     with st.chat_message("assistant"):
         response_stream = rag_answer_stream(
             query,
@@ -83,7 +86,7 @@ if query:
             llm=llm,
         )
         answer = st.write_stream(response_stream)
-    
+
     st.session_state.messages.append(
         {
             "role": "assistant",

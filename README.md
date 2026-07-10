@@ -35,21 +35,18 @@ This process only needs to be performed once for a given document collection. On
 flowchart LR
 
 subgraph Offline["Document Indexing Pipeline"]
+    direction LR
 
-A[arXiv Search] --> B[Download PDFs]
+    A[arXiv Search]
+    B[Download PDFs]
+    C[PyPDFLoader]
+    D[Document Pages]
+    E[Recursive Character Text Splitter]
+    F[Text Chunks]
+    G[BAAI/bge-small-en-v1.5]
+    H[(Chroma Vector Database)]
 
-B --> C[PyPDFLoader]
-
-C --> D[Document Pages]
-
-D --> E[Recursive Character Text Splitter]
-
-E --> F[Text Chunks]
-
-F --> G[BAAI/bge-small-en-v1.5]
-
-G --> H[(Chroma Vector Database)]
-
+    A --> B --> C --> D --> E --> F --> G --> H
 end
 ```
 
@@ -64,20 +61,17 @@ The resulting prompt is then supplied to the local MLX language model, which gen
 ```mermaid
 flowchart LR
 
-subgraph Online["RAG Question Answering Pipeline"]
+subgraph Offline["RAG Question Answering Pipeline"]
+    direction LR
 
-A[User Question]
+    A[User Question]
+    B[Chroma Retriever]
+    C[Top-k Relevant Chunks]
+    D[Prompt Builder]
+    E[MLX-LM]
+    F[Generated Answer]
 
-A --> B[Chroma Retriever]
-
-B --> C[Top-k Relevant Chunks]
-
-C --> D[Prompt Builder]
-
-D --> E[MLX-LM]
-
-E --> F[Generated Answer]
-
+    A --> B --> C --> D --> E --> F
 end
 ```
 
