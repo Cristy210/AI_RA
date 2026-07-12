@@ -116,25 +116,40 @@ Response:
 """
 
 
-def rag_answer(query: str) -> str:
+def rag_answer(
+        query: str,
+        retriever=None,
+        llm=None,
+    ) -> str:
     """Generate a response using the complete RAG pipeline.
 
-    Retrieves the most relevant document chunks, formats them into a
-    prompt, invokes the MLX language model, and returns the generated
-    answer.
+    Uses the supplied retriever and language model if provided;
+    otherwise, initializes default instances. This function returns the
+    complete generated response and is intended for non-streaming
+    interfaces such as an MCP server.
 
     Args:
         query (str): User's research question.
+        retriever: Preloaded document retriever. If ``None``, a default
+        retriever is created. 
+        llm: Preloaded MLX language model. If ``None``, a default model
+        is initialized. 
 
     Returns:
         str: Generated answer based on the retrieved document context.
     """
-    retriever = load_retriever(k=10)
-    docs = retriever.invoke(query)
+    query = query.strip()
 
+    if not query:
+        raise ValueError("Query must not be empty")
+    if retriever is None:
+        retriever = load_retriever(k=10)
+    if llm is None:
+        llm = MLXModel(max_tokens=700)
+    
+    docs = retriever.invoke(query)
     context = format_context(docs)
     prompt = build_prompt(query, context)
-    llm = MLXModel()
     answer = llm.generate_response(prompt)
 
     return answer
