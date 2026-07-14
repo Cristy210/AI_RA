@@ -1,9 +1,4 @@
-"""Streamlit frontend for the AI Research Assistant.
-
-This application provides a chat-based interface for querying a local
-retrieval-augmented generation (RAG) pipeline built with Chroma,
-LangChain, and an MLX-powered language model.
-"""
+"""Streamlit frontend for the AI Research Assistant."""
 
 from pathlib import Path
 import sys
