@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import logging
+import requests
 
 import arxiv
 from langchain_chroma import Chroma
@@ -9,7 +10,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from src.database_manager import(
+from src.database_manager import (
     DB_DIR,
     EMBEDDING_MODEL,
     database_exists,
@@ -26,17 +27,18 @@ PAPER_DIR = PROJECT_ROOT / "data" / "papers"
 PAPER_DIR.mkdir(parents=True, exist_ok=True)
 DB_DIR.mkdir(parents=True, exist_ok=True)
 
+
 def download_arxiv_papers(
     query: str,
     max_results: int,
 ) -> list[dict]:
     """Search arXiv and download papers that are not already cached.
-    
+
     Args:
         query: Research topic used for arXiv search.
-        max_results: Maximum number of papers to retrieve. 
+        max_results: Maximum number of papers to retrieve.
     Returns:
-        Metadata for the retrieved papers. 
+        Metadata for the retrieved papers.
     """
 
     client = arxiv.Client()
@@ -55,10 +57,20 @@ def download_arxiv_papers(
 
         if not pdf_path.exists():
             logger.info("Downloading paper: %s", paper.title)
-            download_pdf(paper.pdf_url, pdf_path)
+
+            try:
+                download_pdf(paper.pdf_url, pdf_path)
+            except requests.RequestException as error:
+                logger.warning(
+                    "Skipping paper '%s'. PDF download failed from %s: %s",
+                    paper.title,
+                    paper.pdf_url,
+                    error,
+                )
+                continue
         else:
             logger.info("Using cached paper: %s", paper.title)
-        
+
         downloaded_papers.append(
             {
                 "paper_id": paper_id,
@@ -73,6 +85,7 @@ def download_arxiv_papers(
         )
 
     return downloaded_papers
+
 
 def load_pdfs_as_docs(papers: list[dict]):
     """Load downloaded PDFs and attach arXiv metadata."""
@@ -96,17 +109,17 @@ def load_pdfs_as_docs(papers: list[dict]):
                 }
             )
         docs.extend(pages)
-    
+
     return docs
 
 
 def build_research_database(
-    query:str,
+    query: str,
     database_name: str,
     max_results: int = 10,
 ) -> dict:
     """Build a named Chroma collection from relevant arXiv papers.
-    
+
     Args:
         query: Research topic used to search arXiv
         database_name: User-facing name for the research database.
@@ -114,7 +127,7 @@ def build_research_database(
 
     Returns:
         Summary of the database building operation.
-    
+
     Raises:
         ValueError: If the topic, database name, or result count is invalid.
     """
@@ -124,12 +137,12 @@ def build_research_database(
 
     if not query:
         raise ValueError("Research topic must not be empty")
-    
+
     if max_results < 1:
         raise ValueError(f"max_results must be greater than zero. Got {max_results}")
-    
+
     if database_exists(collection_name):
-        return{
+        return {
             "status": "already_exists",
             "database_name": collection_name,
             "message": (
@@ -137,7 +150,7 @@ def build_research_database(
                 "Select it from the existing database instead."
             ),
         }
-    
+
     papers = download_arxiv_papers(
         query=query,
         max_results=max_results,
@@ -147,9 +160,9 @@ def build_research_database(
         return {
             "status": "no_results",
             "database_name": collection_name,
-            "message": f"No arXiv were found for '{query}'."
+            "message": f"No arXiv were found for '{query}'.",
         }
-    
+
     docs = load_pdfs_as_docs(papers)
 
     splitter = RecursiveCharacterTextSplitter(
@@ -159,7 +172,7 @@ def build_research_database(
 
     chunks = splitter.split_documents(docs)
     embeddings = HuggingFaceEmbeddings(
-        model_name = EMBEDDING_MODEL,
+        model_name=EMBEDDING_MODEL,
         encode_kwargs={"normalize_embeddings": True},
     )
 
@@ -188,6 +201,7 @@ def build_research_database(
         "chunks_indexed": len(chunks),
     }
 
+
 def main() -> None:
     """Build a sample research database from the command line."""
 
@@ -198,6 +212,7 @@ def main() -> None:
     )
 
     print(result)
+
 
 if __name__ == "__main__":
     main()
