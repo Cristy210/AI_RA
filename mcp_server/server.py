@@ -1,5 +1,19 @@
 """MCP server for the AI Research Assistant."""
 
+from pathlib import Path
+import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+)
+
 from mcp.server.fastmcp import FastMCP
 
 from llm.mlx_model import MLXModel
@@ -56,7 +70,7 @@ def ask_research_question(
     query: str,
     database_name: str,
 ) -> str:
-    """Answer a research using a selected research database.
+    """Answer a research question using a selected research database.
 
     Args:
         query: Research question to answer.

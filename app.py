@@ -2,6 +2,11 @@
 
 from pathlib import Path
 import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 import streamlit as st
 
 from llm.mlx_model import MLXModel
@@ -12,9 +17,6 @@ from src.database_manager import (
 from src.ingest_arxiv import build_research_database
 from src.rag import rag_answer_stream, load_retriever
 
-
-PROJECT_ROOT = Path(__file__).resolve().parent
-sys.path.append(str(PROJECT_ROOT))
 
 st.set_page_config(
     page_title="AI Research Assistant",
@@ -43,7 +45,6 @@ def reset_chat() -> None:
     st.session_state.messages = []
 
 
-llm = get_llm()
 
 st.title("AI Research Assistant")
 
@@ -141,6 +142,7 @@ if active_database is None:
     st.stop()
 
 retriever = get_retriever(active_database)
+llm = get_llm()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
