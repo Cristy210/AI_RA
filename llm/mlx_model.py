@@ -6,8 +6,12 @@ model's chat template, and generating both standard and streaming
 responses.
 """
 
+import logging
+
 from mlx_lm import load, generate, stream_generate
 from mlx_lm.sample_utils import make_sampler
+
+logger = logging.getLogger(__name__)
 
 
 class MLXModel:
@@ -29,7 +33,7 @@ class MLXModel:
 
         self.sampler = make_sampler(temp=0.5, top_k=20)
 
-        print(f"Loading MLX Model: {self.model_name}")
+        logger.info("Loading MLX model: %s", self.model_name)
         self.model, self.tokenizer = load(self.model_name)
 
     def _build_chat_prompt(self, prompt: str) -> str:

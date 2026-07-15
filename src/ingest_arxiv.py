@@ -99,7 +99,7 @@ def load_pdfs_as_docs(papers: list[dict]):
         for page in pages:
             page.metadata.update(
                 {
-                    "papr_id": paper["paper_id"],
+                    "paper_id": paper["paper_id"],
                     "title": paper["title"],
                     "authors": ",".join(paper["authors"]),
                     "published": paper["published"],
@@ -146,7 +146,7 @@ def build_research_database(
             "status": "already_exists",
             "database_name": collection_name,
             "message": (
-                f"Database '{collection_name} already exists. "
+                f"Database '{collection_name}' already exists. "
                 "Select it from the existing database instead."
             ),
         }
@@ -160,7 +160,7 @@ def build_research_database(
         return {
             "status": "no_results",
             "database_name": collection_name,
-            "message": f"No arXiv were found for '{query}'.",
+            "message": f"No arXiv papers were found for '{query}'.",
         }
 
     docs = load_pdfs_as_docs(papers)

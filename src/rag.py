@@ -192,7 +192,7 @@ def rag_answer_stream(
 if __name__ == "__main__":
     query = "What is the main objective in sparse subspace clustering methods?"
 
-    answer = rag_answer(query)
+    answer = rag_answer(query=query, database_name="subspace_clustering")
 
     print("\n" + "=" * 80)
     print("Final Answer")

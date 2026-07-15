@@ -6,7 +6,7 @@ from src.rag import load_retriever
 def main() -> None:
     """Retrieve relevant chunks from a sample database."""
 
-    database_name = "sparse_subspace_clustering"
+    database_name = "subspace_clustering"
 
     retriever = load_retriever(
         database_name=database_name,
