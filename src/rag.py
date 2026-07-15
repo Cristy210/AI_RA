@@ -19,7 +19,7 @@ DB_DIR = PROJECT_ROOT / "vectorstore" / "research_papers"
 
 
 def load_retriever(
-    database_name:str,
+    database_name: str,
     k: int = 25,
 ):
     """Create a retriever for a selected research database.
@@ -30,7 +30,7 @@ def load_retriever(
 
     Returns:
         Configured Langchain retriever.
-    
+
     Raises:
         ValueError: If the selected database is empty.
     """
@@ -38,13 +38,9 @@ def load_retriever(
     document_count = vectorstore._collection.count()
 
     if document_count == 0:
-        raise ValueError(
-            f"Research database '{database_name}' is empty."
-        )
-    
-    return vectorstore.as_retriever(
-        search_kwargs={"k": k}
-    )
+        raise ValueError(f"Research database '{database_name}' is empty.")
+
+    return vectorstore.as_retriever(search_kwargs={"k": k})
 
 
 def format_context(docs: list[Document]) -> str:
@@ -116,21 +112,22 @@ Retrieved excerpts:
 Response:
 """
 
+
 def rag_answer(
-        query: str,
-        database_name: str,
-        retriever=None,
-        llm=None,
-    ) -> str:
+    query: str,
+    database_name: str,
+    retriever=None,
+    llm=None,
+) -> str:
     """Generate a complete answer from the selected research database.
 
     Args:
         query (str): User's research question.
         database_name: Research database to query.
         retriever: Preloaded document retriever. If ``None``, a default
-        retriever is created. 
+        retriever is created.
         llm: Preloaded MLX language model. If ``None``, a default model
-        is initialized. 
+        is initialized.
 
     Returns:
         str: Generated answer based on the retrieved document context.
@@ -139,15 +136,13 @@ def rag_answer(
 
     if not query:
         raise ValueError("Query must not be empty")
-    
+
     if retriever is None:
-        retriever = load_retriever(
-            database_name=database_name
-        )
-    
+        retriever = load_retriever(database_name=database_name)
+
     if llm is None:
         llm = MLXModel(max_tokens=700)
-    
+
     docs = retriever.invoke(query)
     context = format_context(docs)
     prompt = build_prompt(query, context)
@@ -156,10 +151,10 @@ def rag_answer(
 
 
 def rag_answer_stream(
-        query: str,
-        database_name: str,
-        retriever=None,
-        llm=None,
+    query: str,
+    database_name: str,
+    retriever=None,
+    llm=None,
 ):
     """Generate a streaming answer from a selected database.
 
@@ -178,7 +173,7 @@ def rag_answer_stream(
 
     if not query:
         raise ValueError("Query must not be empty")
-    
+
     if retriever is None:
         retriever = load_retriever(
             database_name=database_name,

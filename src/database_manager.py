@@ -14,29 +14,32 @@ REGISTRY_PATH = PROJECT_ROOT / "vectorstore" / "databases.json"
 
 EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
-def normalize_database_name(name:str) -> str:
+
+def normalize_database_name(name: str) -> str:
     """Convert a database name into a safe Chroma collection name."""
 
     normalized = re.sub(
         r"[^a-zA-Z0-9_-]+",
         "_",
-        name.strip.lower(),
+        name.strip().lower(),
     ).strip("_")
 
     if not normalized:
         raise ValueError("Database name must not be empty")
-    
+
     return normalized
+
 
 def load_database_registry() -> dict:
     """Load the research database registry."""
 
     if not REGISTRY_PATH.exists():
         return {}
-    
+
     with REGISTRY_PATH.open("r", encoding="utf-8") as file:
         return json.load(file)
-    
+
+
 def save_database_registry(registry: dict) -> None:
     """Persist the research database registry."""
 
@@ -45,11 +48,12 @@ def save_database_registry(registry: dict) -> None:
     with REGISTRY_PATH.open("w", encoding="utf-8") as file:
         json.dump(registry, file, indent=2)
 
+
 def register_database(
-        database_name: str,
-        research_topic: str,
-        papers_processed: int,
-        chunks_indexed: int,
+    database_name: str,
+    research_topic: str,
+    papers_processed: int,
+    chunks_indexed: int,
 ) -> None:
     """Add or update a database in the registry."""
 
@@ -63,8 +67,9 @@ def register_database(
         "chunks_indexed": chunks_indexed,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
-    
+
     save_database_registry(registry)
+
 
 def list_research_databases() -> list[dict]:
     """Return registered research databases."""
@@ -76,6 +81,7 @@ def list_research_databases() -> list[dict]:
         key=lambda item: item["display_name"].lower(),
     )
 
+
 def database_exists(database_name: str) -> bool:
     """Check whether a database is registered."""
 
@@ -84,13 +90,14 @@ def database_exists(database_name: str) -> bool:
 
     return normalized_name in registry
 
+
 def load_vectorstore(database_name: str) -> Chroma:
     """Load an existing Chroma collection."""
 
     collection_name = normalize_database_name(database_name)
 
     embeddings = HuggingFaceEmbeddings(
-        model_name = EMBEDDING_MODEL,
+        model_name=EMBEDDING_MODEL,
         encode_kwargs={"normalize_embeddings": True},
     )
 
@@ -100,21 +107,20 @@ def load_vectorstore(database_name: str) -> Chroma:
         embedding_function=embeddings,
     )
 
+
 def get_database_status(database_name: str) -> dict:
     """Return metadata and chunk count for a database."""
-    
+
     collection_name = normalize_database_name(database_name)
     registry = load_database_registry()
 
     if collection_name not in registry:
-        raise ValueError(
-            f"Research Database '{collection_name}' does not exist."
-        )
-    
+        raise ValueError(f"Research Database '{collection_name}' does not exist.")
+
     vectorstore = load_vectorstore(collection_name)
     metadata = registry[collection_name]
 
-    return{
+    return {
         **metadata,
         "document_chunks": vectorstore._collection.count(),
         "ready": vectorstore._collection.count() > 0,

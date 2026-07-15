@@ -13,10 +13,7 @@ def main() -> None:
         k=5,
     )
 
-    query = (
-        "What are the optimization methods used in "
-        "sparse subspace clustering?"
-    )
+    query = "What are the optimization methods used in sparse subspace clustering?"
 
     results = retriever.invoke(query)
 
