@@ -14,6 +14,28 @@ This project demonstrates how to build a modern RAG pipeline that runs entirely 
 - 🤖 Generate responses using a locally hosted MLX language model. 
 - 💬 Interactive streamlit chat interface with token streaming. 
 
+## Interfaces
+
+The AI Research Assistant can be accessed through two interfaces that share the same Retrieval-Augmented Generation (RAG) pipeline.
+
+| Interface | Description |
+|-----------|-------------|
+| 💬 **Streamlit** | Browser-based chat application for creating research databases and asking questions about indexed literature. |
+|  **MCP Server** | Exposes the RAG pipeline as MCP tools that can be accessed from Claude Desktop and other MCP-compatible clients. |
+
+---
+
+## Documentation
+
+The following guides walk through running the application and connecting an MCP client.
+
+| Guide | Description |
+|-------|-------------|
+| 📘 [Running the Streamlit Application](docs/streamlit.md) | Set up the project, build research databases, and use the Streamlit interface. |
+| 📘 [Connecting Claude Desktop with MCP](docs/mcp.md) | Configure Claude Desktop to connect to the AI Research Assistant through MCP. |
+
+---
+
 ## Pipelines
 The project consists of two independent workflows. 
 1. **Document Indexing Pipeline:** – Downloads, processes, and indexes research papers into a vector database.
@@ -31,25 +53,6 @@ This pipeline is responsible for preparing research papers for semantic retrieva
 
 This process only needs to be performed once for a given document collection. Once the vector database has been created, it can be reused for future queries without regenerating embeddings.
 
-```mermaid
-flowchart LR
-
-subgraph Offline["Document Indexing Pipeline"]
-    direction LR
-
-    A[arXiv Search]
-    B[Download PDFs]
-    C[PyPDFLoader]
-    D[Document Pages]
-    E[Recursive Character Text Splitter]
-    F[Text Chunks]
-    G[BAAI/bge-small-en-v1.5]
-    H[(Chroma Vector Database)]
-
-    A --> B --> C --> D --> E --> F --> G --> H
-end
-```
-
 ### RAG Question Answering Pipeline
 
 When a user submits a question through the Streamlit interface, the application performs semantic retrieval before invoking the language model.
@@ -58,48 +61,38 @@ Rather than asking the language model to answer solely from its pretrained knowl
 
 The resulting prompt is then supplied to the local MLX language model, which generates a response based on the retrieved context. This approach significantly reduces hallucinations while ensuring that responses remain tied to the indexed literature.
 
+## End-to-End System Architecture
+
 ```mermaid
 flowchart LR
 
-subgraph Offline["RAG Question Answering Pipeline"]
-    direction LR
-
-    A[User Question]
-    B[Chroma Retriever]
-    C[Top-k Relevant Chunks]
-    D[Prompt Builder]
-    E[MLX-LM]
-    F[Generated Answer]
-
-    A --> B --> C --> D --> E --> F
+subgraph Data_Preparation["Offline Data Preparation"]
+    A[Research Topic]
+    --> B[Download arXiv Papers]
+    --> C[PyPDFLoader]
+    --> D[Text Splitter]
+    --> E[Embedding Model<br/>BAAI/bge-small-en-v1.5]
+    --> F[(Chroma Vector Database)]
 end
-```
 
-## End-to-End RAG Workflow
+subgraph Clients["User Interfaces"]
+    G[💬 Streamlit Chat]
+    H[MCP Client<br/>Claude Desktop]
+end
 
-```mermaid
-flowchart TD
+subgraph RAG["Shared RAG Pipeline"]
+    I[User Question]
+    J[Chroma Retriever]
+    K[Top-k Relevant Chunks]
+    L[Prompt Builder]
+    M[MLX-LM<br/>Mistral-7B]
+    N[Grounded Response]
 
-A[Research Papers] --> B[PyPDFLoader]
+    I --> J --> K --> L --> M --> N
+end
 
-B --> C[Text Splitter]
+F --> J
 
-C --> D[Embedding Model
-BAAI/bge-small-en-v1.5]
-
-D --> E[Chroma Vector Database]
-
-F[User Question]
-    --> G[Chroma Retriever]
-
-E --> G
-
-G --> H[Top-k Relevant Chunks]
-
-H --> I[Prompt Builder]
-
-I --> J[MLX-LM
-Mistral 7B]
-
-J --> K[Generated Response]
+G --> I
+H --> I
 ```
