@@ -12,7 +12,8 @@ This project demonstrates how to build a modern RAG pipeline that runs entirely 
 - 🗂️ Generate and store dense vector embeddings using Chroma Vector database. 
 - 🔍 Perform semantic similarity search over indexed documents. 
 - 🤖 Generate responses using a locally hosted MLX language model. 
-- 💬 Interactive streamlit chat interface with token streaming. 
+- 💬 Interactive streamlit chat interface with token streaming.
+- 🔌 MCP server for Claude Desktop and other MCP-compatible clients
 
 ## Interfaces
 
