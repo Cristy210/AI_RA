@@ -148,12 +148,8 @@ Both interfaces operate on the same Chroma vector databases stored in the `vecto
 
 ## Example Workflow
 
-Ask Claude to create a new database:
+The following demo shows Claude Desktop creating a research database through the AI Research Assistant MCP server.
 
-> Build a research database named **Vision Transformers** using the arXiv topic **vision transformers** and download 20 papers.
-
-Then ask a question:
-
-> What positional encoding methods are commonly used in Vision Transformers?
-
-Claude will automatically invoke the appropriate MCP tools, retrieve relevant document chunks from the selected database, and generate a grounded response using the local MLX language model.
+<video controls>
+  <source src="visuals/mcp_create_db.mp4" type="video/mp4">
+</video>
