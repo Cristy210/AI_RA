@@ -102,4 +102,7 @@ H --> I
 
 The following demo shows Claude Desktop creating a research database through the AI Research Assistant MCP server.
 
-🎥 **Demo:** [Create a research database through Claude Desktop](visuals/mcp_create_db.mp4)
+<video controls width="800">
+  <source src="docs/visuals/mcp_create_db.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
