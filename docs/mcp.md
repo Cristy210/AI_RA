@@ -150,6 +150,4 @@ Both interfaces operate on the same Chroma vector databases stored in the `vecto
 
 The following demo shows Claude Desktop creating a research database through the AI Research Assistant MCP server.
 
-<video controls>
-  <source src="visuals/mcp_create_db.mp4" type="video/mp4">
-</video>
+🎥 **Demo:** [Create a research database through Claude Desktop](visuals/mcp_create_db.mp4)
