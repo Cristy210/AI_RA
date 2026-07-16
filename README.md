@@ -97,3 +97,9 @@ F --> J
 G --> I
 H --> I
 ```
+
+## Example Workflow
+
+The following demo shows Claude Desktop creating a research database through the AI Research Assistant MCP server.
+
+🎥 **Demo:** [Create a research database through Claude Desktop](visuals/mcp_create_db.mp4)
