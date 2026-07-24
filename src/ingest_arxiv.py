@@ -1,6 +1,5 @@
 """Create domain-specific research databases from arXiv papers."""
 
-from pathlib import Path
 import logging
 import requests
 

@@ -1,13 +1,8 @@
 """Streamlit frontend for the AI Research Assistant."""
 
 from pathlib import Path
-import sys
-
-PROJECT_ROOT = Path(__file__).resolve().parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-import streamlit as st
+from src.ingest_arxiv import build_research_database
+from src.rag import rag_answer_stream, load_retriever
 
 from llm.mlx_model import MLXModel
 from src.database_manager import (
@@ -15,8 +10,13 @@ from src.database_manager import (
     list_research_databases,
     delete_database,
 )
-from src.ingest_arxiv import build_research_database
-from src.rag import rag_answer_stream, load_retriever
+
+import sys
+import streamlit as st
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 st.set_page_config(
@@ -44,7 +44,6 @@ def reset_chat() -> None:
     """Clear the current chat history."""
 
     st.session_state.messages = []
-
 
 
 st.title("AI Research Assistant")

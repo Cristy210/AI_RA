@@ -128,27 +128,26 @@ def get_database_status(database_name: str) -> dict:
         "ready": vectorstore._collection.count() > 0,
     }
 
+
 def delete_database(database_name: str) -> dict:
-    """ Delete a research database and its downloaded papers
+    """Delete a research database and its downloaded papers
 
     Args:
         database_name: Name of the research database to delete.
-    
+
     Returns:
         A summary describing the deleted database and paper directory.
-    
+
     Raises:
         ValueError: If the database is not registered.
-        RuntimeError: If the database could not be completely deleted. 
+        RuntimeError: If the database could not be completely deleted.
     """
 
     collection_name = normalize_database_name(database_name)
     registry = load_database_registry()
 
     if collection_name not in registry:
-        raise ValueError(
-            f"Research database '{collection_name}' does not exist."
-        )
+        raise ValueError(f"Research database '{collection_name}' does not exist.")
 
     paper_directory = PAPERS_DIR / collection_name
     deleted_paper_directory = False

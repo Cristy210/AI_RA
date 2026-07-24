@@ -2,17 +2,7 @@
 
 from pathlib import Path
 import sys
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
 import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s - %(message)s",
-)
 
 from mcp.server.fastmcp import FastMCP
 
@@ -24,6 +14,16 @@ from src.database_manager import (
 )
 from src.ingest_arxiv import build_research_database
 from src.rag import rag_answer
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+)
+
 
 mcp = FastMCP("AI Research Assistant")
 
@@ -86,13 +86,14 @@ def ask_research_question(
         llm=llm,
     )
 
+
 @mcp.tool()
 def delete_research_database(database_name: str) -> dict:
     """Delete  a research database and its downloaded papers
 
     Args:
         database_name: Name of the research database to delete.
-    
+
     Returns:
         Summary of the database deletion operation.
     """
@@ -118,10 +119,10 @@ def delete_research_database(database_name: str) -> dict:
         "display_name": result["display_name"],
         "papers_deleted": result["papers_deleted"],
         "message": (
-            f"Research database '{result['display_name']}'"
-            "was deleted successfully."
-        )
+            f"Research database '{result['display_name']}'was deleted successfully."
+        ),
     }
+
 
 if __name__ == "__main__":
     mcp.run()
