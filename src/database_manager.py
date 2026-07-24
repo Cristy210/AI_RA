@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
+import shutil
 
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -11,6 +12,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DB_DIR = PROJECT_ROOT / "vectorstore" / "research_papers"
 REGISTRY_PATH = PROJECT_ROOT / "vectorstore" / "databases.json"
+PAPERS_DIR = PROJECT_ROOT / "data" / "research_papers"
 
 EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
@@ -124,4 +126,52 @@ def get_database_status(database_name: str) -> dict:
         **metadata,
         "document_chunks": vectorstore._collection.count(),
         "ready": vectorstore._collection.count() > 0,
+    }
+
+def delete_database(database_name: str) -> dict:
+    """ Delete a research database and its downloaded papers
+
+    Args:
+        database_name: Name of the research database to delete.
+    
+    Returns:
+        A summary describing the deleted database and paper directory.
+    
+    Raises:
+        ValueError: If the database is not registered.
+        RuntimeError: If the database could not be completely deleted. 
+    """
+
+    collection_name = normalize_database_name(database_name)
+    registry = load_database_registry()
+
+    if collection_name not in registry:
+        raise ValueError(
+            f"Research database '{collection_name}' does not exist."
+        )
+
+    paper_directory = PAPERS_DIR / collection_name
+    deleted_paper_directory = False
+
+    try:
+        vectorstore = load_vectorstore(collection_name)
+        vectorstore.delete_collection()
+
+        if paper_directory.exists():
+            shutil.rmtree(paper_directory)
+            deleted_paper_directory = True
+
+        deleted_database = registry.pop(collection_name)
+        save_database_registry(registry)
+
+    except Exception as error:
+        raise RuntimeError(
+            f"Failed to delete research database '{collection_name}'."
+        ) from error
+
+    return {
+        "name": collection_name,
+        "display_name": deleted_database["display_name"],
+        "paper_directory": str(paper_directory),
+        "papers_deleted": deleted_paper_directory,
     }
