@@ -130,6 +130,7 @@ Once connected, Claude Desktop can invoke the following tools exposed by the AI 
 | `build_database` | Create a new research database from arXiv papers. |
 | `database_status` | View metadata for a research database. |
 | `ask_research_question` | Query a selected research database using the local RAG pipeline. |
+| `delete_research_database` | Delete the selected research database and the respective downloaded papers. |
 
 ---
 

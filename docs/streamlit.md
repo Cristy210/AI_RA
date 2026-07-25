@@ -148,6 +148,19 @@ Selecting a different database automatically loads its corresponding Chroma coll
 
 ---
 
+# Deleting a Research Database
+
+The Streamlit application allows you to permanently remove a research database when it is no longer needed.
+
+To delete a database:
+
+1. Select an existing database from the sidebar.
+2. Expand **Delete database**.
+3. Type the database name exactly as displayed to confirm the deletion.
+4. Click **Delete Database**.
+
+---
+
 # Reusing Existing Databases
 
 Previously created databases are stored locally and automatically detected the next time the application starts.
