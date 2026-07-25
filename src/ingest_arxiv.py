@@ -1,6 +1,5 @@
 """Create domain-specific research databases from arXiv papers."""
 
-from pathlib import Path
 import logging
 import requests
 
@@ -13,6 +12,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from src.database_manager import (
     DB_DIR,
     EMBEDDING_MODEL,
+    PAPERS_DIR,
     database_exists,
     normalize_database_name,
     register_database,
@@ -21,25 +21,28 @@ from src.utils.downloader import download_pdf
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-PAPER_DIR = PROJECT_ROOT / "data" / "papers"
-
-PAPER_DIR.mkdir(parents=True, exist_ok=True)
+PAPERS_DIR.mkdir(parents=True, exist_ok=True)
 DB_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def download_arxiv_papers(
     query: str,
     max_results: int,
+    database_name: str,
 ) -> list[dict]:
-    """Search arXiv and download papers that are not already cached.
+    """Search arXiv and download papers into a database-specific directory.
 
     Args:
         query: Research topic used for arXiv search.
         max_results: Maximum number of papers to retrieve.
+        database_name: Name of the research database associated with the papers.
     Returns:
         Metadata for the retrieved papers.
     """
+
+    collection_name = normalize_database_name(database_name)
+    database_paper_dir = PAPERS_DIR / collection_name
+    database_paper_dir.mkdir(parents=True, exist_ok=True)
 
     client = arxiv.Client()
 
@@ -53,7 +56,7 @@ def download_arxiv_papers(
 
     for paper in client.results(search):
         paper_id = paper.entry_id.split("/")[-1]
-        pdf_path = PAPER_DIR / f"{paper_id}.pdf"
+        pdf_path = database_paper_dir / f"{paper_id}.pdf"
 
         if not pdf_path.exists():
             logger.info("Downloading paper: %s", paper.title)
@@ -154,6 +157,7 @@ def build_research_database(
     papers = download_arxiv_papers(
         query=query,
         max_results=max_results,
+        database_name=collection_name,
     )
 
     if not papers:

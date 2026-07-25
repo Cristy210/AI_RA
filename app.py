@@ -1,21 +1,22 @@
 """Streamlit frontend for the AI Research Assistant."""
 
 from pathlib import Path
-import sys
-
-PROJECT_ROOT = Path(__file__).resolve().parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-import streamlit as st
+from src.ingest_arxiv import build_research_database
+from src.rag import rag_answer_stream, load_retriever
 
 from llm.mlx_model import MLXModel
 from src.database_manager import (
     get_database_status,
     list_research_databases,
+    delete_database,
 )
-from src.ingest_arxiv import build_research_database
-from src.rag import rag_answer_stream, load_retriever
+
+import sys
+import streamlit as st
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 st.set_page_config(
@@ -45,10 +46,12 @@ def reset_chat() -> None:
     st.session_state.messages = []
 
 
-
 st.title("AI Research Assistant")
 
 databases = list_research_databases()
+
+if "delete_success" in st.session_state:
+    st.success(st.session_state.pop("delete_success"))
 
 with st.sidebar:
     st.header("Research Database")
@@ -134,6 +137,40 @@ with st.sidebar:
             f"Papers: {status['papers_processed']}\n\n"
             f"Chunks: {status['document_chunks']}"
         )
+
+        with st.expander("Delete database"):
+            st.warning(
+                "This permanently deletes the vector database and its"
+                "downloaded research papers."
+            )
+
+            confirmation = st.text_input(
+                f"Type '{status['display_name']}' to confirm:",
+                key=f"delete_confirmation_{selected_database}",
+            )
+
+            delete_submitted = st.button(
+                "Delete database",
+                type="primary",
+                disabled=confirmation != status["display_name"],
+                key=f"delete_database_{selected_database}",
+            )
+
+            if delete_submitted:
+                try:
+                    result = delete_database(selected_database)
+
+                    get_retriever.clear()
+                    reset_chat()
+                    st.session_state.pop("active_database", None)
+
+                    st.session_state.delete_success = (
+                        f"Deleted '{result['display_name']}' successfully."
+                    )
+
+                    st.rerun()
+                except (ValueError, RuntimeError) as error:
+                    st.error(str(error))
 
 active_database = st.session_state.get("active_database")
 

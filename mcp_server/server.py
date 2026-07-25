@@ -2,17 +2,7 @@
 
 from pathlib import Path
 import sys
-
-PROJECT_ROOT = Path(__file__).resolve().parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
 import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s - %(message)s",
-)
 
 from mcp.server.fastmcp import FastMCP
 
@@ -20,9 +10,20 @@ from llm.mlx_model import MLXModel
 from src.database_manager import (
     get_database_status,
     list_research_databases,
+    delete_database,
 )
 from src.ingest_arxiv import build_research_database
 from src.rag import rag_answer
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+)
+
 
 mcp = FastMCP("AI Research Assistant")
 
@@ -84,6 +85,43 @@ def ask_research_question(
         database_name=database_name,
         llm=llm,
     )
+
+
+@mcp.tool()
+def delete_research_database(database_name: str) -> dict:
+    """Delete  a research database and its downloaded papers
+
+    Args:
+        database_name: Name of the research database to delete.
+
+    Returns:
+        Summary of the database deletion operation.
+    """
+
+    try:
+        result = delete_database(database_name)
+    except ValueError as error:
+        return {
+            "status": "not found",
+            "database_name": database_name,
+            "message": str(error),
+        }
+    except RuntimeError as error:
+        return {
+            "status": "error",
+            "database_name": database_name,
+            "message": str(error),
+        }
+
+    return {
+        "status": "deleted",
+        "database_name": result["name"],
+        "display_name": result["display_name"],
+        "papers_deleted": result["papers_deleted"],
+        "message": (
+            f"Research database '{result['display_name']}'was deleted successfully."
+        ),
+    }
 
 
 if __name__ == "__main__":
