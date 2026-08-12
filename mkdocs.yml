@@ -1,0 +1,24 @@
+site_name: AI Research Assistant
+site_description: Local AI Research Assistant using RAG, MLX-LM, Chroma, Streamlit, and MCP
+site_url: https://cristy210.github.io/AI_RA/
+
+repo_name: Cristy210/AI_RA
+repo_url: https://github.com/Cristy210/AI_RA
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Streamlit Application: streamlit.md
+  - MCP Server: mcp.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
