@@ -24,17 +24,68 @@ logger = logging.getLogger(__name__)
 PAPERS_DIR.mkdir(parents=True, exist_ok=True)
 DB_DIR.mkdir(parents=True, exist_ok=True)
 
+def search_arxiv_papers(
+    query: str,
+    max_candidates: int,
+) -> list[arxiv.Result]:
+    """
+    Search arXiv and return candidate papers without downloading them.
+    """
+    client = arxiv.Client()
 
-def download_arxiv_papers(
+    search = arxiv.Search(
+        query=query,
+        max_results=max_candidates,
+        sort_by=arxiv.SortCriterion.Relevance,
+    )
+
+    return list(client.results(search))
+
+def score_paper_relevance(
+    paper: arxiv.Result,
+    query: str,
+) -> float:
+    """
+    Score a paper using query-term overlap with its title and abstract.
+    """
+    query_terms = set(query.lower().split())
+
+    if not query_terms:
+        return 0.0
+
+    title_terms = set(paper.title.lower().split())
+    abstract_terms = set(paper.summary.lower().split())
+
+    title_score = len(query_terms & title_terms) / len(query_terms)
+    abstract_score = len(query_terms & abstract_terms) / len(query_terms)
+
+    return 0.7 * title_score + 0.3 * abstract_score
+
+def filter_relevant_papers(
+    papers: list[arxiv.Result],
     query: str,
     max_results: int,
+) -> list[arxiv.Result]:
+    """
+    Rank candidate papers and return the most relevant ones.
+    """
+
+    ranked_papers = sorted(
+        papers,
+        key=lambda paper: score_paper_relevance(paper, query),
+        reverse=True,
+    )
+
+    return ranked_papers[:max_results]
+
+def download_arxiv_papers(
+    papers: list[arxiv.Result],
     database_name: str,
 ) -> list[dict]:
     """Search arXiv and download papers into a database-specific directory.
 
     Args:
-        query: Research topic used for arXiv search.
-        max_results: Maximum number of papers to retrieve.
+        papers: list of papers from arXiv database
         database_name: Name of the research database associated with the papers.
     Returns:
         Metadata for the retrieved papers.
@@ -44,17 +95,10 @@ def download_arxiv_papers(
     database_paper_dir = PAPERS_DIR / collection_name
     database_paper_dir.mkdir(parents=True, exist_ok=True)
 
-    client = arxiv.Client()
-
-    search = arxiv.Search(
-        query=query,
-        max_results=max_results,
-        sort_by=arxiv.SortCriterion.Relevance,
-    )
 
     downloaded_papers = []
 
-    for paper in client.results(search):
+    for paper in papers:
         paper_id = paper.entry_id.split("/")[-1]
         pdf_path = database_paper_dir / f"{paper_id}.pdf"
 
@@ -154,9 +198,19 @@ def build_research_database(
             ),
         }
 
-    papers = download_arxiv_papers(
+    candidate_papers = search_arxiv_papers(
+        query=query,
+        max_candidates=max_results*5,
+    )
+
+    relevant_papers = filter_relevant_papers(
+        papers=candidate_papers,
         query=query,
         max_results=max_results,
+    )
+
+    papers = download_arxiv_papers(
+        papers=relevant_papers,
         database_name=collection_name,
     )
 
