@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 PAPERS_DIR.mkdir(parents=True, exist_ok=True)
 DB_DIR.mkdir(parents=True, exist_ok=True)
 
+
 def search_arxiv_papers(
     query: str,
     max_candidates: int,
@@ -40,6 +41,7 @@ def search_arxiv_papers(
     )
 
     return list(client.results(search))
+
 
 def score_paper_relevance(
     paper: arxiv.Result,
@@ -61,6 +63,7 @@ def score_paper_relevance(
 
     return 0.7 * title_score + 0.3 * abstract_score
 
+
 def filter_relevant_papers(
     papers: list[arxiv.Result],
     query: str,
@@ -78,6 +81,7 @@ def filter_relevant_papers(
 
     return ranked_papers[:max_results]
 
+
 def download_arxiv_papers(
     papers: list[arxiv.Result],
     database_name: str,
@@ -94,7 +98,6 @@ def download_arxiv_papers(
     collection_name = normalize_database_name(database_name)
     database_paper_dir = PAPERS_DIR / collection_name
     database_paper_dir.mkdir(parents=True, exist_ok=True)
-
 
     downloaded_papers = []
 
@@ -200,7 +203,7 @@ def build_research_database(
 
     candidate_papers = search_arxiv_papers(
         query=query,
-        max_candidates=max_results*5,
+        max_candidates=max_results * 5,
     )
 
     relevant_papers = filter_relevant_papers(
