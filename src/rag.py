@@ -57,20 +57,24 @@ def format_context(docs: list[Document]) -> str:
         str: Formatted context containing all retrieved document chunks.
     """
     context_blocks = []
+    metadata = doc.metadata
 
     for i, doc in enumerate(docs, start=1):
-        title = doc.metadata.get("title")
-        source = doc.metadata.get("entry_id")
-        page = doc.metadata.get("page")
+        pages = metadata.get("pages")
+        if not pages:
+            old_page = metadata.get("page")
+            pages = str(old_page+1) if old_page is not None else "Unknown"
 
         block = f"""
-[Source {i}]
-Title: {title}
-Source: {source}
-Page: {page}
+                [Source {i}]
+                Title: {metadata.get("title", "Unknown")}
+                Source: {metadata.get("entry_id", "Unknown")}
+                Pages: {pages}
+                Content type: {metadata.get("content_type", "text")}
+                Table IDs: {metadata.get("table_ids") or "N/A"}
 
-{doc.page_content}
-"""
+                {doc.page_content}
+                """
         context_blocks.append(block)
     return "\n\n".join(context_blocks)
 
@@ -99,6 +103,11 @@ Guidelines:
 - When possible, mention the relevant paper/source numbers.
 - Keep the answer clear, technical, and concise. 
 - Format mathematical notaitons using Markdown LaTeX.
+- Interpret table values using their row labels, column headers, and units.
+- Preserve reported numerical values.
+- Do not infer missing cells or compare values with incompatible units.
+- Cite the source and table identifier when available.
+- If only part of a table is provided, avoid claims about the entire table.
 - use inline math with `$...$`.
 - use display equations with `$$...$$`.
 - For example, write `$\\ell_1$`, `$C^T$`, `$|C| + |C^T|$`, and `$\\operatorname{{diag}}(C)=0$`.
