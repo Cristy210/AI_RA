@@ -5,9 +5,17 @@ import requests
 
 import arxiv
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import PyPDFLoader
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+
+from docling.document_converter import DocumentConverter
+from docling.chunking import HybridChunker
+from docling_core.transforms.chunker.tokenizer.huggingface import (
+    HuggingFaceTokenizer,
+)
+from docling_core.types.doc import TableItem
+from langchain_core.documents import Document
+from transformers import AutoTokenizer
 
 from src.database_manager import (
     DB_DIR,
@@ -136,31 +144,71 @@ def download_arxiv_papers(
 
     return downloaded_papers
 
+def load_pdfs_as_chunks(papers: list[dict]) -> list[Document]:
+    """
+    Parse research PDFs and create chunks containing text or tables.
+    """
 
-def load_pdfs_as_docs(papers: list[dict]):
-    """Load downloaded PDFs and attach arXiv metadata."""
-
-    docs = []
-
+    converter = DocumentConverter()
+    tokenizer = HuggingFaceTokenizer(
+        tokenizer=AutoTokenizer.from_pretrained(EMBEDDING_MODEL),
+        max_tokens=450,
+    )
+    chunker = HybridChunker(
+        tokenizer=tokenizer,
+        merge_peers=False,
+        repeat_table_header=True,
+    )
+    documents = []
     for paper in papers:
-        loader = PyPDFLoader(str(paper["pdf_path"]))
-        pages = loader.load()
+        parsed = converter.convert(str(paper["pdf_path"])).document
 
-        for page in pages:
-            page.metadata.update(
-                {
-                    "paper_id": paper["paper_id"],
-                    "title": paper["title"],
-                    "authors": ",".join(paper["authors"]),
-                    "published": paper["published"],
-                    "summary": paper["summary"],
-                    "pdf_url": paper["pdf_url"],
-                    "entry_id": paper["entry_id"],
-                }
+        for chunk_index, chunk in enumerate(
+            chunker.chunk(dl_doc=parsed)
+        ):
+            items = chunk.meta.doc_items
+            pages = sorted({
+                provenance.page_no
+                for item in items
+                for provenance in item.prov
+            })
+
+            table_refs = sorted({
+                item.self_ref
+                for item in items
+                if isinstance(item, TableItem)
+            })
+
+            content = chunker.contextualize(chunk=chunk)
+
+            if not content.strip():
+                continue
+
+            metadata = {
+                "paper_id": paper["paper_id"],
+                "title": paper["title"],
+                "authors": ",".join(paper["authors"]),
+                "publised": paper["publised"],
+                "pdf_url": paper["pdf_url"],
+                "entry_id": paper["entry_id"],
+                "source": str(paper["pdf_path"]),
+                "content_type": "table" if table_refs else "text",
+                "chunk_index": chunk_index,
+                "pages":",".join(map(str, pages)),
+                "table_ids":",".join(
+                    f"{paper['paper_id']}:{ref}"
+                    for ref in table_refs
+                ),
+            }
+
+            documents.append(
+                Document(
+                    page_content=content,
+                    metadata=metadata,
+                )
             )
-        docs.extend(pages)
+    return documents
 
-    return docs
 
 
 def build_research_database(
@@ -224,14 +272,8 @@ def build_research_database(
             "message": f"No arXiv papers were found for '{query}'.",
         }
 
-    docs = load_pdfs_as_docs(papers)
+    chunks = load_pdfs_as_chunks(papers)
 
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1200,
-        chunk_overlap=200,
-    )
-
-    chunks = splitter.split_documents(docs)
     embeddings = HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL,
         encode_kwargs={"normalize_embeddings": True},
@@ -258,7 +300,10 @@ def build_research_database(
         "display_name": database_name.strip(),
         "research_topic": query,
         "papers_processed": len(papers),
-        "pdf_pages_loaded": len(docs),
+        "table_chunks_indexed": sum(
+            chunk.metadata["content_type"] == "table"
+            for chunk in chunks
+        ),
         "chunks_indexed": len(chunks),
     }
 
