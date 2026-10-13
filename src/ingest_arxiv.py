@@ -149,7 +149,31 @@ def load_pdfs_as_chunks(papers: list[dict]) -> list[Document]:
     Parse research PDFs and create chunks containing text or tables.
     """
 
-    converter = DocumentConverter()
+    from docling.datamodel.accelerator_options import (
+    AcceleratorDevice,
+    AcceleratorOptions,
+    )
+    from docling.datamodel.base_models import InputFormat
+    from docling.datamodel.pipeline_options import PdfPipelineOptions
+    from docling.document_converter import DocumentConverter, PdfFormatOption
+
+
+    pipeline_options = PdfPipelineOptions(
+        do_table_structure=True,
+        accelerator_options=AcceleratorOptions(
+            device=AcceleratorDevice.CPU,
+            num_threads=4,
+        ),
+    )
+
+    converter = DocumentConverter(
+        format_options={
+            InputFormat.PDF: PdfFormatOption(
+                pipeline_options=pipeline_options,
+            ),
+        }
+    )
+    
     tokenizer = HuggingFaceTokenizer(
         tokenizer=AutoTokenizer.from_pretrained(EMBEDDING_MODEL),
         max_tokens=450,
@@ -188,7 +212,7 @@ def load_pdfs_as_chunks(papers: list[dict]) -> list[Document]:
                 "paper_id": paper["paper_id"],
                 "title": paper["title"],
                 "authors": ",".join(paper["authors"]),
-                "publised": paper["publised"],
+                "published": paper["published"],
                 "pdf_url": paper["pdf_url"],
                 "entry_id": paper["entry_id"],
                 "source": str(paper["pdf_path"]),
