@@ -57,9 +57,11 @@ def format_context(docs: list[Document]) -> str:
         str: Formatted context containing all retrieved document chunks.
     """
     context_blocks = []
-    metadata = doc.metadata
+    
 
     for i, doc in enumerate(docs, start=1):
+        metadata = doc.metadata
+        
         pages = metadata.get("pages")
         if not pages:
             old_page = metadata.get("page")
